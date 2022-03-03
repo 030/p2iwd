@@ -1,0 +1,28 @@
+---
+name: DIP
+on: [push]
+jobs:
+  dive:
+    runs-on: ubuntu-latest
+    name: Check whether images are up-to-date
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      # yamllint disable rule:line-length
+      - name: Download DIP
+        run: curl -L https://github.com/030/dip/releases/download/4.0.2/dip-ubuntu-20.04 -o dip && chmod +x dip
+      - name: Check markdownlint
+        run: |
+          markdownlint=$(./dip image --name=markdownlint/markdownlint --regex=^0\.[0-9]+\.[0-9]+$)
+          echo $markdownlint
+          grep $markdownlint .github/workflows/go.yml
+      - name: Check koalaman/shellcheck
+        run: |
+          shellcheck=$(./dip image --name=koalaman/shellcheck --regex=^v0\.[0-9]+\.[0-9]+$)
+          echo $shellcheck
+          grep $shellcheck .github/workflows/go.yml
+      - name: Check golangci/golangci-lint
+        run: |
+          golangci=$(./dip image --name=golangci/golangci-lint --regex=^v1\.[0-9]+\.[0-9]+-alpine$)
+          echo $golangci
+          grep $golangci .github/workflows/go.yml
