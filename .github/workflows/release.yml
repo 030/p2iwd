@@ -39,6 +39,7 @@ jobs:
           p2iwd_DELIVERABLE: ${{ env.p2iwd-deliverable }}
           GITHUB_TAG: ${{ github.ref }}
           SHA512_CMD: ${{ matrix.shasum }}
+        # yamllint disable rule:line-length
         if: ${{ startsWith(matrix.os, 'mac') || startsWith(matrix.os, 'ubuntu') }}
       - name: Create release windows
         shell: cmd
