@@ -33,16 +33,6 @@ jobs:
       - name: Use the value
         run: |
           echo "${{ env.p2iwd-deliverable }}"
-      - name: Check whether all versions have been updated
-        run: |
-          version=$(echo "${{ github.ref }}" | sed -e "s|.*\/\(.*\)$|\1|")
-          echo "Version: ${version}"
-          echo "Checking build/package/snap/snapcraft.yaml..."
-          grep ${version} build/package/snap/snapcraft.yaml
-          echo "Checking README.md..."
-          grep "p2iwd:${version}" README.md
-        # yamllint disable rule:line-length
-        if: ${{ startsWith(matrix.os, 'mac') || startsWith(matrix.os, 'ubuntu') }}
       - name: Create release
         run: ./scripts/build.sh
         env:
