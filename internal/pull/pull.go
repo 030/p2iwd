@@ -48,9 +48,13 @@ func (dr *DockerRegistry) download(file, header, url string) error {
 	if err != nil {
 		return err
 	}
-	defer rc.Close()
+	defer func() {
+		if err := rc.Close(); err != nil {
+			panic(err)
+		}
+	}()
 
-	out, err := os.Create(file)
+	out, err := os.Create(filepath.Clean(file))
 	if err != nil {
 		return err
 	}
@@ -335,7 +339,7 @@ func tar(dir string) error {
 		return err
 	}
 
-	out, err := os.Create(filepath.Join(dir, imageTar))
+	out, err := os.Create(filepath.Clean(filepath.Join(dir, imageTar)))
 	if err != nil {
 		return err
 	}

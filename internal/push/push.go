@@ -23,6 +23,17 @@ type DockerRegistry struct {
 	Dir, Host, Pass, User string
 }
 
+// check whether an URL starts with a scheme, e.g. http:// or https://
+func absoluteURL(l string) (bool, error) {
+	u, err := url.Parse(l)
+	if err != nil {
+		return false, err
+	}
+	au := u.IsAbs()
+	log.Debugf("check whether the URL: '%s' is an absolute URL: '%v'", u, au)
+	return au, nil
+}
+
 func (dr *DockerRegistry) location(dockerImageName string) (string, error) {
 	url := dr.Host + internalHttp.Version + dockerImageName + "/blobs/uploads/"
 	log.Debugf("URL: '%s'", url)
@@ -44,6 +55,31 @@ func checksum(file *os.File) (string, error) {
 	}
 	checksum := fmt.Sprintf("sha256:%x", h.Sum(nil))
 	return checksum, nil
+}
+
+func (dr *DockerRegistry) uploadURL(path string, f *os.File, di DockerImage) (string, error) {
+	log.Debugf("calculating checksum for path: '%s'", path)
+	cs, err := checksum(f)
+	if err != nil {
+		return "", err
+	}
+
+	l, err := dr.location(di.name)
+	if err != nil {
+		return "", err
+	}
+
+	b, err := absoluteURL(l)
+	if err != nil {
+		return "", err
+	}
+	log.Debugf("check whether location: '%s' is an absolute URL. Outcome: '%t'", l, b)
+	u := l + "?digest=" + cs
+	if !b {
+		u = dr.Host + u
+	}
+
+	return u, nil
 }
 
 func (dr *DockerRegistry) dockerImageNameAndTag(path string) (DockerImage, error) {
@@ -80,27 +116,15 @@ func (dr *DockerRegistry) All() error {
 					}
 				}()
 
-				log.Debugf("calculating checksum for path: '%s'", path)
-				cs, err := checksum(f)
-				if err != nil {
-					return err
-				}
-
 				log.Debugf("determine dockerImageName and tag for path: '%s'", path)
 				dinat, err := dr.dockerImageNameAndTag(path)
 				if err != nil {
 					return err
 				}
 
-				l, err := dr.location(dinat.name)
+				uploadURL, err := dr.uploadURL(path, f, dinat)
 				if err != nil {
 					return err
-				}
-				u := url.URL{Host: l}
-				log.Debugf("check whether location: '%s' is a absolute URL. Outcome: '%t'", l, u.IsAbs())
-				uploadURL := l + "?digest=" + cs
-				if !u.IsAbs() {
-					uploadURL = dr.Host + uploadURL
 				}
 				log.Debugf("URL: '%s'", uploadURL)
 				log.Debugf("Filename: '%s'", d.Name())
