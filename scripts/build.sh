@@ -1,12 +1,7 @@
 #!/bin/bash -e
 
-GITHUB_TAG="${GITHUB_TAG:-local}"
-SHA512_CMD="${SHA512_CMD:-sha512sum}"
-export p2iwd_DELIVERABLE="${p2iwd_DELIVERABLE:-p2iwd}"
+export GO_BUILD_DELIVERABLE="${GO_BUILD_DELIVERABLE:-p2iwd}"
 
-echo "GITHUB_TAG: '$GITHUB_TAG' p2iwd_DELIVERABLE: '$p2iwd_DELIVERABLE'"
-cd cmd/p2iwd
-go build -ldflags "-X main.Version=${GITHUB_TAG}" -o "${p2iwd_DELIVERABLE}"
-$SHA512_CMD "${p2iwd_DELIVERABLE}" >"${p2iwd_DELIVERABLE}.sha512.txt"
-chmod +x "${p2iwd_DELIVERABLE}"
-cd ../..
+curl https://gist.githubusercontent.com/030/620a95e7a699c4db3e76b2b8b0309909/raw/e218edf140117c1b368a3fcdb7d6110a073dd0e7/go-build.sh -o go-build.sh
+chmod +x go-build.sh
+./go-build.sh p2iwd "${GO_BUILD_DELIVERABLE}"

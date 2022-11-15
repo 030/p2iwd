@@ -20,7 +20,15 @@
 [![codecov](https://codecov.io/gh/030/p2iwd/branch/main/graph/badge.svg)](https://codecov.io/gh/030/p2iwd)
 [![codebeat badge](https://codebeat.co/badges/72e50a98-d155-4020-a826-89f1a5977249)](https://codebeat.co/projects/github-com-030-p2iwd-main)
 
-Pull and Push Images Without Docker (P2IWD).
+Pull and Push Images Without Docker (P2IWD):
+
+- pull an individual image.
+
+## Quickstart
+
+```bash
+curl -L https://github.com/030/p2iwd/releases/download/v0.2.0/p2iwd-ubuntu-20.04 -o /tmp/p2iwd-ubuntu-20.04
+```
 
 ## Configuration
 

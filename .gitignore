@@ -1,1 +1,5 @@
+*.log
 cmd/p2iwd/p2iwd
+go-build.sh
+dip
+cmd/p2iwd/p2iwd*

@@ -1,8 +1,8 @@
 package p2iwd
 
 import (
-	"github.com/030/p2iwd/internal/pull"
-	"github.com/030/p2iwd/internal/push"
+	"github.com/030/p2iwd/internal/app/p2iwd/pull"
+	"github.com/030/p2iwd/internal/app/p2iwd/push"
 )
 
 type DockerRegistry struct {

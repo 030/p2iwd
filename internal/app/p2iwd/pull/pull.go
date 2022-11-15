@@ -12,12 +12,10 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/030/p2iwd/internal/pkg/http"
-	"github.com/tidwall/gjson"
-
 	internalHttp "github.com/030/p2iwd/internal/pkg/http"
 	archiverV4 "github.com/mholt/archiver/v4"
 	log "github.com/sirupsen/logrus"
+	"github.com/tidwall/gjson"
 )
 
 const (
@@ -28,7 +26,7 @@ const (
 )
 
 type DockerRegistry struct {
-	Dir, Host, Pass, User string
+	Dir, Host, Pass, Protocol, Repo, Tag, User string
 }
 
 type manifestJSON struct {
@@ -43,7 +41,7 @@ func (dr *DockerRegistry) download(file, header, url string) error {
 		return nil
 	}
 
-	ha := http.Auth{HeaderKey: "Accept", HeaderValue: header, Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
+	ha := internalHttp.Auth{HeaderKey: "Accept", HeaderValue: header, Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
 	rc, err := ha.RequestAndResponseBody(nil)
 	if err != nil {
 		return err
@@ -73,7 +71,7 @@ func (dr *DockerRegistry) download(file, header, url string) error {
 }
 
 func (dr *DockerRegistry) downloadLayer(blobSum, file, repo string) error {
-	url := dr.Host + internalHttp.Version + repo + blobs + blobSum
+	url := dr.Protocol + "://" + dr.Host + internalHttp.Version + repo + blobs + blobSum
 	if err := dr.download(file, "application/vnd.docker.image.rootfs.diff.tar.gzip", url); err != nil {
 		return err
 	}
@@ -81,9 +79,9 @@ func (dr *DockerRegistry) downloadLayer(blobSum, file, repo string) error {
 	return nil
 }
 
-func (dr *DockerRegistry) downloadManifest(dir, repo, tag string) error {
-	file := filepath.Join(dir, "upload-manifest.json")
-	url := dr.Host + internalHttp.Version + repo + uriManifests + tag
+func (dr *DockerRegistry) downloadManifest() error {
+	file := filepath.Join(dr.Dir, "upload-manifest.json")
+	url := dr.Protocol + "://" + dr.Host + internalHttp.Version + dr.Repo + uriManifests + dr.Tag
 	header := "application/vnd.docker.distribution.manifest.v2+json"
 	if err := dr.download(file, header, url); err != nil {
 		return err
@@ -92,11 +90,11 @@ func (dr *DockerRegistry) downloadManifest(dir, repo, tag string) error {
 	return nil
 }
 
-func (dr *DockerRegistry) downloadConfig(dir, repo, tag string) error {
-	url := dr.Host + internalHttp.Version + repo + uriManifests + tag
+func (dr *DockerRegistry) downloadConfig() error {
+	url := dr.Protocol + "://" + dr.Host + internalHttp.Version + dr.Repo + uriManifests + dr.Tag
 	log.Debug(url)
 	header := "application/vnd.docker.distribution.manifest.v2+json"
-	ha := http.Auth{HeaderKey: "Accept", HeaderValue: header, Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
+	ha := internalHttp.Auth{HeaderKey: "Accept", HeaderValue: header, Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
 	rc, err := ha.RequestAndResponseBody(nil)
 	if err != nil {
 		return err
@@ -106,7 +104,7 @@ func (dr *DockerRegistry) downloadConfig(dir, repo, tag string) error {
 	if err != nil {
 		return err
 	}
-	log.Debug(string(b))
+	log.Trace(string(b))
 	configDigest := gjson.Get(string(b), "config.digest").String()
 	log.Debug(configDigest)
 	digests := gjson.Get(string(b), "layers.#.digest").Array()
@@ -118,12 +116,12 @@ func (dr *DockerRegistry) downloadConfig(dir, repo, tag string) error {
 
 	log.Debug(digests)
 
-	if err := dr.manifest(dir, configDigest, repo, tag, s); err != nil {
+	if err := dr.manifest(configDigest, s); err != nil {
 		return err
 	}
 
-	file := filepath.Join(dir, configDigest+".json")
-	url = dr.Host + internalHttp.Version + repo + blobs + configDigest
+	file := filepath.Join(dr.Dir, configDigest+".json")
+	url = dr.Protocol + "://" + dr.Host + internalHttp.Version + dr.Repo + blobs + configDigest
 	if err := dr.download(file, "application/vnd.docker.container.image.v1+json", url); err != nil {
 		return err
 	}
@@ -138,8 +136,16 @@ func (dr *DockerRegistry) All() error {
 	return nil
 }
 
+func (dr *DockerRegistry) AllTags() error {
+	if err := dr.tags(dr.Repo); err != nil {
+		panic(err)
+	}
+
+	return nil
+}
+
 func (dr *DockerRegistry) allLayers() error {
-	url := dr.Host + internalHttp.Version + uriCatalog
+	url := dr.Protocol + "://" + dr.Host + internalHttp.Version + uriCatalog
 	repos, err := dr.json(url, "repositories")
 	if err != nil {
 		return err
@@ -153,7 +159,8 @@ func (dr *DockerRegistry) allLayers() error {
 		go func(repoString string) {
 			defer wg.Done()
 
-			if err := dr.tags(repoString); err != nil {
+			dr.Repo = repoString
+			if err := dr.AllTags(); err != nil {
 				panic(err)
 			}
 		}(repoString)
@@ -163,9 +170,37 @@ func (dr *DockerRegistry) allLayers() error {
 	return nil
 }
 
+func (dr *DockerRegistry) Image() error {
+	dr.Dir = filepath.Join(dr.Dir, dr.Host, dr.Repo, dr.Tag)
+	log.Debugf("dir: '%s'", dr.Dir)
+	if err := os.MkdirAll(dr.Dir, os.ModePerm); err != nil {
+		return err
+	}
+
+	if err := dr.layers(); err != nil {
+		return err
+	}
+
+	if err := dr.downloadManifest(); err != nil {
+		return err
+	}
+
+	if err := dr.downloadConfig(); err != nil {
+		return err
+	}
+
+	if err := tar(dr.Dir); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (dr *DockerRegistry) tags(repo string) error {
-	url := dr.Host + internalHttp.Version + repo + uriTagsList
-	tags, err := dr.json(url, "tags")
+	// url := dr.Protocol + "://" + dr.Host + internalHttp.Version + repo + uriTagsList
+	// https://registry.hub.docker.com/v2/repositories/utrecht/dip/tags
+	url := dr.Protocol + "://registry.hub.docker.com" + internalHttp.Version + "repositories/" + repo + "/tags"
+	log.Debug(url)
+	tags, err := dr.json(url, "results.#.name")
 	if err != nil {
 		return err
 	}
@@ -177,24 +212,10 @@ func (dr *DockerRegistry) tags(repo string) error {
 		tagString := tag.String()
 		go func(tag string) {
 			defer wg.Done()
-			dir := filepath.Join(dr.Dir, repo, tagString)
-			if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-				panic(err)
-			}
 
-			if err := dr.layers(dir, repo, tagString); err != nil {
-				panic(err)
-			}
-
-			if err := dr.downloadManifest(dir, repo, tagString); err != nil {
-				panic(err)
-			}
-
-			if err := dr.downloadConfig(dir, repo, tagString); err != nil {
-				panic(err)
-			}
-
-			if err := tar(dir); err != nil {
+			dr.Tag = tagString
+			log.Debugf("tag: '%s'", dr.Tag)
+			if err := dr.Image(); err != nil {
 				panic(err)
 			}
 		}(tagString)
@@ -204,8 +225,8 @@ func (dr *DockerRegistry) tags(repo string) error {
 	return nil
 }
 
-func (dr *DockerRegistry) layers(dir, repo, tag string) error {
-	url := dr.Host + internalHttp.Version + repo + uriManifests + tag
+func (dr *DockerRegistry) layers() error {
+	url := dr.Protocol + "://" + dr.Host + internalHttp.Version + dr.Repo + uriManifests + dr.Tag
 	blobSums, err := dr.json(url, "fsLayers.#.blobSum")
 	if err != nil {
 		return err
@@ -220,12 +241,12 @@ func (dr *DockerRegistry) layers(dir, repo, tag string) error {
 		go func(blobSumString string) {
 			defer wg.Done()
 
-			if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			if err := os.MkdirAll(dr.Dir, os.ModePerm); err != nil {
 				panic(err)
 			}
 
-			file := filepath.Join(dir, blobSumString+".tar")
-			if err := dr.downloadLayer(blobSumString, file, repo); err != nil {
+			file := filepath.Join(dr.Dir, blobSumString+".tar")
+			if err := dr.downloadLayer(blobSumString, file, dr.Repo); err != nil {
 				panic(err)
 			}
 		}(blobSumString)
@@ -238,7 +259,7 @@ func (dr *DockerRegistry) layers(dir, repo, tag string) error {
 		go func(blobSumString string) {
 			defer wg.Done()
 
-			file := filepath.Join(dir, blobSumString+".tar")
+			file := filepath.Join(dr.Dir, blobSumString+".tar")
 			if err := validate(blobSumString, file); err != nil {
 				panic(err)
 			}
@@ -250,7 +271,7 @@ func (dr *DockerRegistry) layers(dir, repo, tag string) error {
 }
 
 func (dr *DockerRegistry) json(url, key string) ([]gjson.Result, error) {
-	ha := http.Auth{HeaderKey: "Accept", Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
+	ha := internalHttp.Auth{HeaderKey: "Accept", Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
 	rc, err := ha.RequestAndResponseBody(nil)
 	if err != nil {
 		return nil, err
@@ -296,10 +317,10 @@ func validate(expected, file string) error {
 	return nil
 }
 
-func (dr *DockerRegistry) manifest(dir, configDigest, repo, tag string, digests []string) error {
+func (dr *DockerRegistry) manifest(configDigest string, digests []string) error {
 	re := regexp.MustCompile(`^http(s)?:\/\/(.*)$`)
 	host := re.ReplaceAllString(dr.Host, `$2`)
-	repoTag := host + "/" + repo + ":" + tag
+	repoTag := host + "/" + dr.Repo + ":" + dr.Tag
 	f := configDigest + ".json"
 
 	b, err := json.Marshal([]manifestJSON{{Config: f, RepoTags: []string{repoTag}, Layers: digests}})
@@ -307,7 +328,7 @@ func (dr *DockerRegistry) manifest(dir, configDigest, repo, tag string, digests 
 		return err
 	}
 
-	if err := os.WriteFile(filepath.Join(dir, "manifest.json"), b, 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(dr.Dir, "manifest.json"), b, 0o600); err != nil {
 		return err
 	}
 
