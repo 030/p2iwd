@@ -12,12 +12,10 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/030/p2iwd/internal/pkg/http"
-	"github.com/tidwall/gjson"
-
 	internalHttp "github.com/030/p2iwd/internal/pkg/http"
 	archiverV4 "github.com/mholt/archiver/v4"
 	log "github.com/sirupsen/logrus"
+	"github.com/tidwall/gjson"
 )
 
 const (
@@ -32,9 +30,9 @@ type DockerRegistry struct {
 }
 
 type manifestJSON struct {
-	Config   string   `json:"Config"`
-	RepoTags []string `json:"RepoTags"`
-	Layers   []string `json:"Layers"`
+	Config   string   `json:"config"`
+	RepoTags []string `json:"repoTags"`
+	Layers   []string `json:"layers"`
 }
 
 func (dr *DockerRegistry) download(file, header, url string) error {
@@ -43,7 +41,7 @@ func (dr *DockerRegistry) download(file, header, url string) error {
 		return nil
 	}
 
-	ha := http.Auth{HeaderKey: "Accept", HeaderValue: header, Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
+	ha := internalHttp.Auth{HeaderKey: "Accept", HeaderValue: header, Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
 	rc, err := ha.RequestAndResponseBody(nil)
 	if err != nil {
 		return err
@@ -54,20 +52,24 @@ func (dr *DockerRegistry) download(file, header, url string) error {
 		}
 	}()
 
-	out, err := os.Create(filepath.Clean(file))
+	f, err := os.Create(filepath.Clean(file))
 	if err != nil {
 		return err
 	}
 	defer func() {
-		if err := out.Close(); err != nil {
+		if err := f.Close(); err != nil {
 			panic(err)
 		}
 	}()
 
-	_, err = io.Copy(out, rc)
+	_, err = io.Copy(f, rc)
 	if err != nil {
 		return err
 	}
+	if err := f.Sync(); err != nil {
+		return err
+	}
+	log.Infof("file: '%s' created", file)
 
 	return nil
 }
@@ -94,29 +96,33 @@ func (dr *DockerRegistry) downloadManifest(dir, repo, tag string) error {
 
 func (dr *DockerRegistry) downloadConfig(dir, repo, tag string) error {
 	url := dr.Host + internalHttp.Version + repo + uriManifests + tag
-	log.Debug(url)
+	log.Info(url)
 	header := "application/vnd.docker.distribution.manifest.v2+json"
-	ha := http.Auth{HeaderKey: "Accept", HeaderValue: header, Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
+	ha := internalHttp.Auth{HeaderKey: "Accept", HeaderValue: header, Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
 	rc, err := ha.RequestAndResponseBody(nil)
 	if err != nil {
 		return err
 	}
-	defer rc.Close()
+	defer func() {
+		if err := rc.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	b, err := io.ReadAll(rc)
 	if err != nil {
 		return err
 	}
-	log.Debug(string(b))
+	log.Trace(string(b))
 	configDigest := gjson.Get(string(b), "config.digest").String()
 	log.Debug(configDigest)
 	digests := gjson.Get(string(b), "layers.#.digest").Array()
 
-	var s []string
+	s := make([]string, 0, len(digests))
 	for _, digest := range digests {
 		s = append(s, digest.String()+".tar")
 	}
 
-	log.Debug(digests)
+	log.Trace(digests)
 
 	if err := dr.manifest(dir, configDigest, repo, tag, s); err != nil {
 		return err
@@ -144,7 +150,7 @@ func (dr *DockerRegistry) allLayers() error {
 	if err != nil {
 		return err
 	}
-	log.Debugf("repos: '%s'", repos)
+	log.Infof("repositories: '%s'", repos)
 
 	var wg sync.WaitGroup
 	for _, repo := range repos {
@@ -163,13 +169,38 @@ func (dr *DockerRegistry) allLayers() error {
 	return nil
 }
 
+func (dr *DockerRegistry) Image(repo, tag string) error {
+	dir := filepath.Join(dr.Dir, repo, tag)
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		return err
+	}
+
+	if err := dr.layers(dir, repo, tag); err != nil {
+		return err
+	}
+
+	if err := dr.downloadManifest(dir, repo, tag); err != nil {
+		return err
+	}
+
+	if err := dr.downloadConfig(dir, repo, tag); err != nil {
+		return err
+	}
+
+	if err := tar(dir); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (dr *DockerRegistry) tags(repo string) error {
 	url := dr.Host + internalHttp.Version + repo + uriTagsList
 	tags, err := dr.json(url, "tags")
 	if err != nil {
 		return err
 	}
-	log.Debugf("tags: '%s'", tags)
+	log.Infof("tags: '%s'", tags)
 
 	var wg sync.WaitGroup
 	for _, tag := range tags {
@@ -177,24 +208,8 @@ func (dr *DockerRegistry) tags(repo string) error {
 		tagString := tag.String()
 		go func(tag string) {
 			defer wg.Done()
-			dir := filepath.Join(dr.Dir, repo, tagString)
-			if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-				panic(err)
-			}
 
-			if err := dr.layers(dir, repo, tagString); err != nil {
-				panic(err)
-			}
-
-			if err := dr.downloadManifest(dir, repo, tagString); err != nil {
-				panic(err)
-			}
-
-			if err := dr.downloadConfig(dir, repo, tagString); err != nil {
-				panic(err)
-			}
-
-			if err := tar(dir); err != nil {
+			if err := dr.Image(repo, tag); err != nil {
 				panic(err)
 			}
 		}(tagString)
@@ -250,7 +265,7 @@ func (dr *DockerRegistry) layers(dir, repo, tag string) error {
 }
 
 func (dr *DockerRegistry) json(url, key string) ([]gjson.Result, error) {
-	ha := http.Auth{HeaderKey: "Accept", Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
+	ha := internalHttp.Auth{HeaderKey: "Accept", Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
 	rc, err := ha.RequestAndResponseBody(nil)
 	if err != nil {
 		return nil, err
@@ -307,7 +322,7 @@ func (dr *DockerRegistry) manifest(dir, configDigest, repo, tag string, digests 
 		return err
 	}
 
-	if err := os.WriteFile(filepath.Join(dir, "manifest.json"), b, 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "manifest.json"), b, 0o600); err != nil {
 		return err
 	}
 
@@ -328,7 +343,7 @@ func tar(dir string) error {
 				m[path] = ""
 			}
 
-			log.Debug(path)
+			log.Trace(path)
 			return nil
 		}); err != nil {
 		return err

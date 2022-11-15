@@ -97,6 +97,31 @@ func (dr *DockerRegistry) dockerImageNameAndTag(path string) (DockerImage, error
 	return DockerImage{name: dockerImageName, tag: tag}, nil
 }
 
+func (dr *DockerRegistry) manifestUpload(f *os.File, headerValue, uploadURL string) error {
+	ha := internalHttp.Auth{HeaderKey: "Content-Type", HeaderValue: headerValue, Method: "PUT", Pass: dr.Pass, User: dr.User, URL: uploadURL}
+	rc, err := ha.RequestAndResponseBody(f)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	defer func() {
+		if err := rc.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	b, err := io.ReadAll(rc)
+	if err != nil {
+		return err
+	}
+	log.Trace(string(b))
+	return nil
+}
+
 func (dr *DockerRegistry) All() error {
 	if err := filepath.WalkDir(dr.Dir,
 		func(path string, d fs.DirEntry, err error) error {
@@ -110,11 +135,6 @@ func (dr *DockerRegistry) All() error {
 				if err != nil {
 					return err
 				}
-				defer func() {
-					if err := f.Close(); err != nil {
-						panic(err)
-					}
-				}()
 
 				log.Debugf("determine dockerImageName and tag for path: '%s'", path)
 				dinat, err := dr.dockerImageNameAndTag(path)
@@ -126,27 +146,19 @@ func (dr *DockerRegistry) All() error {
 				if err != nil {
 					return err
 				}
-				log.Debugf("URL: '%s'", uploadURL)
-				log.Debugf("Filename: '%s'", d.Name())
+				log.Tracef("url: '%s'", uploadURL)
+				log.Tracef("filename: '%s'", d.Name())
 
 				headerValue := "application/vnd.docker.image.rootfs.diff.tar.gzip"
 				if d.Name() == "upload-manifest.json" {
 					headerValue = "application/vnd.docker.distribution.manifest.v2+json"
 					uploadURL = dr.Host + internalHttp.Version + dinat.name + "/manifests/" + dinat.tag
-					log.Debugf("Output regex extract:'%s' '%s' -> '%s'", dinat.name, dinat.tag, uploadURL)
+					log.Tracef("output regex extract:'%s' '%s' -> '%s'", dinat.name, dinat.tag, uploadURL)
 				}
 
-				ha := internalHttp.Auth{HeaderKey: "Content-Type", HeaderValue: headerValue, Method: "PUT", Pass: dr.Pass, User: dr.User, URL: uploadURL}
-				rc, err := ha.RequestAndResponseBody(f)
-				if err != nil {
+				if err := dr.manifestUpload(f, headerValue, uploadURL); err != nil {
 					return err
 				}
-				defer rc.Close()
-				b, err := io.ReadAll(rc)
-				if err != nil {
-					return err
-				}
-				log.Debug(string(b))
 			}
 			return nil
 		}); err != nil {

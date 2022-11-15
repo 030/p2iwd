@@ -1,1 +1,6 @@
+*.log
 cmd/p2iwd/p2iwd
+cmd/p2iwd/repository
+go-build.sh
+dip
+cmd/p2iwd/p2iwd*
