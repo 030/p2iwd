@@ -27,7 +27,7 @@ Pull and Push Images Without Docker (P2IWD):
 ## Quickstart
 
 ```bash
-curl -L https://github.com/030/p2iwd/releases/download/v0.2.0/p2iwd-ubuntu-20.04 -o /tmp/p2iwd-ubuntu-20.04
+curl -L https://github.com/030/p2iwd/releases/download/v0.2.1/p2iwd-ubuntu-20.04 -o /tmp/p2iwd-ubuntu-20.04
 ```
 
 ## Configuration
