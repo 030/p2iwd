@@ -1,25 +1,24 @@
-# Changelog
-
+<a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="v1.0.0"></a>
+## [v1.0.0] - 2022-11-15
+### Feat
+- [[#8](https://github.com/030/p2iwd/issues/8)] Upload a single image.
+
+### BREAKING CHANGE
+
+`~/.p2iwd/creds.yml` deprecated. Define
+everything in `~/.p2iwd/config.yml` from now on.
+
+
+<a name="v0.2.0"></a>
 ## [v0.2.0] - 2022-04-19
 
-### Added
+<a name="v0.1.0"></a>
+## v0.1.0 - 2022-03-06
 
-- backup all images from a Harbor server.
-- upload all images to another Harbor server.
-
-### Changed
-
-- Golang version to 1.18.
-
-## [v0.1.0] - 2022-03-06
-
-### Added
-
-- backup all images from a Nexus3 server.
-- upload all images to another Nexus3 server.
-
-[Unreleased]: https://github.com/030/p2iwd/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/030/p2iwd/compare/v1.0.0...HEAD
+[v1.0.0]: https://github.com/030/p2iwd/compare/v0.2.0...v1.0.0
 [v0.2.0]: https://github.com/030/p2iwd/compare/v0.1.0...v0.2.0
-[v0.1.0]: https://github.com/030/p2iwd/releases/tag/v0.1.0

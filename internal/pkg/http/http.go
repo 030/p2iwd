@@ -17,7 +17,6 @@ type Auth struct {
 }
 
 func (a *Auth) RequestAndResponse(body io.Reader) (*http.Response, error) {
-	log.Debugf("Auth: '%v'", a)
 	req, err := http.NewRequest(a.Method, a.URL, body)
 	if err != nil {
 		return nil, err
@@ -36,7 +35,7 @@ func (a *Auth) RequestAndResponse(body io.Reader) (*http.Response, error) {
 		return nil, err
 	}
 	log.Debug(resp.Status)
-	log.Debug(resp.StatusCode)
+	log.Infof("url: '%s'. StatusCode: '%d'", a.URL, resp.StatusCode)
 
 	return resp, nil
 }
