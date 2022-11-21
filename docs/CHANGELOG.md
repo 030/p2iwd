@@ -3,9 +3,12 @@
 
 
 <a name="v1.0.0"></a>
-## [v1.0.0] - 2022-11-15
+## [v1.0.0] - 2022-11-21
 ### Feat
 - [[#8](https://github.com/030/p2iwd/issues/8)] Upload a single image.
+
+### Fix
+- Broken release github action.
 
 ### BREAKING CHANGE
 

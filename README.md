@@ -35,6 +35,8 @@
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=030_p2iwd&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=030_p2iwd)
 [![codecov](https://codecov.io/gh/030/p2iwd/branch/main/graph/badge.svg)](https://codecov.io/gh/030/p2iwd)
 [![GolangCI](https://golangci.com/badges/github.com/golangci/golangci-web.svg)](https://golangci.com/r/github.com/030/p2iwd)
+[![Chocolatey](https://img.shields.io/chocolatey/dt/p2iwd)](https://chocolatey.org/packages/p2iwd)
+[![p2iwd](https://snapcraft.io//p2iwd/badge.svg)](https://snapcraft.io/p2iwd)
 [![codebeat badge](https://codebeat.co/badges/f4aa5086-a4d5-41cd-893a-5da816ee9107)](https://codebeat.co/projects/github-com-030-p2iwd-main)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
