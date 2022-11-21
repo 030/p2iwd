@@ -36,7 +36,7 @@ jobs:
       - name: Create release
         run: ./scripts/build.sh
         env:
-          p2iwd_DELIVERABLE: ${{ env.p2iwd-deliverable }}
+          GO_BUILD_DELIVERABLE: ${{ env.p2iwd-deliverable }}
           GITHUB_TAG: ${{ github.ref }}
           SHA512_CMD: ${{ matrix.shasum }}
         # yamllint disable rule:line-length
@@ -45,7 +45,7 @@ jobs:
         shell: cmd
         run: |
           echo "GITHUB_TAG: '${{ github.ref }}'"
-          echo "p2iwd_DELIVERABLE: '${{ env.p2iwd-deliverable }}'"
+          echo "P2IWD_DELIVERABLE: '${{ env.p2iwd-deliverable }}'"
           cd cmd/p2iwd
           go build -ldflags "-X main.Version=${{ github.ref }}" -o "${{ env.p2iwd-deliverable }}"
           sha512sum "${{ env.p2iwd-deliverable }}" > "${{ env.p2iwd-deliverable }}.sha512.txt"
