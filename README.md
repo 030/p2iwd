@@ -50,7 +50,7 @@ Pull and Push Images Without Docker (P2IWD):
 
 ## Quickstart
 
-[Download the latest release](https://github.com/030/p2iwd/releases/tag/v1.0.1)
+[Download the latest release](https://github.com/030/p2iwd/releases/tag/v1.0.2)
 and follow one of the following quickstarts:
 
 - [Nexus3](./docs/quickstarts/NEXUS3.md)

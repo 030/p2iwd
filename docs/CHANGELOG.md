@@ -2,11 +2,14 @@
 ## [Unreleased]
 
 
-<a name="v1.0.1"></a>
-## [v1.0.1] - 2022-11-23
+<a name="v1.0.2"></a>
+## [v1.0.2] - 2022-12-23
 ### Build
 - **deps:** Update versions.
 
+
+<a name="v1.0.1"></a>
+## [v1.0.1] - 2022-11-23
 ### Fix
 - Add missing badges.
 
@@ -31,7 +34,8 @@ everything in `~/.p2iwd/config.yml` from now on.
 <a name="v0.1.0"></a>
 ## v0.1.0 - 2022-03-06
 
-[Unreleased]: https://github.com/030/p2iwd/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/030/p2iwd/compare/v1.0.2...HEAD
+[v1.0.2]: https://github.com/030/p2iwd/compare/v1.0.1...v1.0.2
 [v1.0.1]: https://github.com/030/p2iwd/compare/v1.0.0...v1.0.1
 [v1.0.0]: https://github.com/030/p2iwd/compare/v0.2.0...v1.0.0
 [v0.2.0]: https://github.com/030/p2iwd/compare/v0.1.0...v0.2.0
