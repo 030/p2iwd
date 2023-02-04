@@ -3,7 +3,7 @@ module github.com/030/p2iwd
 go 1.19
 
 require (
-	github.com/030/logging v0.1.1
+	github.com/030/logging v0.1.2
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
 	github.com/sirupsen/logrus v1.9.0
@@ -39,7 +39,7 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
-	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
