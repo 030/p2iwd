@@ -21,16 +21,6 @@ var rootCmd = &cobra.Command{
 	Long: `Pull and Push Images Without Docker (P2IWD) allows a user to pull an
 image without docker and push it to a registry. By default it will
 download all images that reside in a Docker registry.
-
-Examples:
-  # Pull images:
-  p2iwd pull
-
-  # Pull an individual image
-  p2iwd pull -r a -t b
-
-  # Push images:
-  p2iwd push
 `,
 
 	Version: Version,
@@ -85,14 +75,14 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", `config file (default: "${HOME}/.p2iwd/config.yml")`)
-	rootCmd.PersistentFlags().StringVar(&dir, "dir", "", "describe dir")
-	rootCmd.PersistentFlags().StringVar(&host, "host", "", "describe host")
-	rootCmd.PersistentFlags().StringVar(&logLevel, "logLevel", "info", "change the log level (default: info, options: trace, debug, info, warn, error or none)")
-	rootCmd.PersistentFlags().StringVarP(&pass, "pass", "p", "", "describe pass")
-	rootCmd.PersistentFlags().StringVarP(&repo, "repo", "r", "", "describe repo")
+	rootCmd.PersistentFlags().StringVar(&dir, "dir", "/tmp/p2iwd", "where to store are read the image tars")
+	rootCmd.PersistentFlags().StringVar(&host, "host", "https://registry-1.docker.io", "the registy, e.g. 'harbor.io'")
+	rootCmd.PersistentFlags().StringVar(&logLevel, "logLevel", "info", "change the log level (options: trace, debug, info, warn, error or none)")
+	rootCmd.PersistentFlags().StringVarP(&pass, "pass", "p", "", "password to loging to a docker registry")
+	rootCmd.PersistentFlags().StringVarP(&repo, "repo", "r", "", "repository that contains the image, e.g. 'utrecht/n3dr'")
 	rootCmd.PersistentFlags().BoolVar(&syslog, "syslog", false, "write the log to syslog")
-	rootCmd.PersistentFlags().StringVarP(&tag, "tag", "t", "", "describe tag")
-	rootCmd.PersistentFlags().StringVarP(&user, "user", "u", "", "describe user")
+	rootCmd.PersistentFlags().StringVarP(&tag, "tag", "t", "", "tag of an image, e.g. '6.3.0'")
+	rootCmd.PersistentFlags().StringVarP(&user, "user", "u", "", "user to login to a docker registry")
 }
 
 // initConfig reads in config file and ENV variables if set.

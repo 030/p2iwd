@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/030/logging/pkg/logging"
 	"github.com/030/p2iwd/internal/app/p2iwd/pull"
 	log "github.com/sirupsen/logrus"
@@ -11,7 +13,15 @@ import (
 var pullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Pull an image",
-	Long:  `Pull an image.`,
+	Long: `Pull an image.
+
+Examples:
+  # Pull images:
+  p2iwd pull
+
+  # Pull an individual image from DockerHub and store it in /tmp/p2iwd:
+  p2iwd pull --repo utecht/n3dr --tag 6.3.0 --user utrecht --pass some-token
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		l := logging.Logging{File: "p2iwd-pull.log", Level: logLevel, Syslog: syslog}
 		if _, err := l.Setup(); err != nil {
@@ -20,11 +30,17 @@ var pullCmd = &cobra.Command{
 
 		pdr := pull.DockerRegistry{Dir: dir, Host: host, Pass: pass, User: user}
 		if repo != "" {
-			if err := pdr.Image(repo, tag); err != nil {
-				log.Fatal(err)
+			if strings.HasPrefix(host, "https://registry-1.docker.io") {
+				if err := pull.DockerHub(dir, repo, tag); err != nil {
+					log.Fatal(err)
+				}
+			} else {
+				if err := pdr.Image(repo, tag); err != nil {
+					log.Fatal(err)
+				}
 			}
 		} else {
-			if err := pdr.All(); err != nil {
+			if err := pdr.All(""); err != nil {
 				log.Fatal(err)
 			}
 		}

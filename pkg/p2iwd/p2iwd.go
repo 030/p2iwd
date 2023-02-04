@@ -11,7 +11,7 @@ type DockerRegistry struct {
 
 func (dr *DockerRegistry) Backup() error {
 	pdr := pull.DockerRegistry{Dir: dr.Dir, Host: dr.Host, Pass: dr.Pass, User: dr.User}
-	if err := pdr.All(); err != nil {
+	if err := pdr.All(""); err != nil {
 		return err
 	}
 	return nil
