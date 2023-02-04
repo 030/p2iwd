@@ -11,7 +11,12 @@ import (
 var pushCmd = &cobra.Command{
 	Use:   "push",
 	Short: "Push an image",
-	Long:  `Push an image.`,
+	Long: `Push an image.
+
+Examples:
+  # Push images:
+  p2iwd push
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		l := logging.Logging{File: "p2iwd-push.log", Level: logLevel, Syslog: syslog}
 		if _, err := l.Setup(); err != nil {

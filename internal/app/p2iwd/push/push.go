@@ -38,7 +38,7 @@ func (dr *DockerRegistry) location(dockerImageName string) (string, error) {
 	url := dr.Host + internalHttp.Version + dockerImageName + "/blobs/uploads/"
 	log.Debugf("URL: '%s'", url)
 	ha := internalHttp.Auth{Method: "POST", Pass: dr.Pass, User: dr.User, URL: url}
-	resp, err := ha.RequestAndResponse(nil)
+	resp, err := ha.RequestAndResponse(nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -99,7 +99,7 @@ func (dr *DockerRegistry) dockerImageNameAndTag(path string) (DockerImage, error
 
 func (dr *DockerRegistry) manifestUpload(f *os.File, headerValue, uploadURL string) error {
 	ha := internalHttp.Auth{HeaderKey: "Content-Type", HeaderValue: headerValue, Method: "PUT", Pass: dr.Pass, User: dr.User, URL: uploadURL}
-	rc, err := ha.RequestAndResponseBody(f)
+	rc, err := ha.RequestAndResponseBody(f, "")
 	if err != nil {
 		return err
 	}
