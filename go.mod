@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/030/logging v0.1.1
-	github.com/hashicorp/go-retryablehttp v0.7.1
+	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
