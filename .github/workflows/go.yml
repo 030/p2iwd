@@ -27,14 +27,16 @@ jobs:
             grep -v internal/app/p2iwd/p2iwdtest |\
             grep -v cmd/p2iwd)
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4.3.0
         with:
+          fail_ci_if_error: true
           files: ./coverage.txt
           flags: unittests
+          token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
       - name: SonarCloud Scan
-        uses: sonarsource/sonarcloud-github-action@master
+        uses: sonarsource/sonarcloud-github-action@v2.1.1
         with:
           args: >
             -Dsonar.organization=030-github

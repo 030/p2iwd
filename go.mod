@@ -11,6 +11,7 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
 	github.com/tidwall/gjson v1.14.4
+	gopkg.in/validator.v2 v2.0.1
 )
 
 require (
@@ -41,7 +42,6 @@ require (
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

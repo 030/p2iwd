@@ -1,0 +1,141 @@
+---
+issues:
+  exclude-rules:
+    - linters:
+        - gochecknoinits
+      path: cmd/p2iwd/pull.go
+      text: "don't use `init` function"
+    - linters:
+        - gochecknoinits
+      path: cmd/p2iwd/push.go
+      text: "don't use `init` function"
+    - linters:
+        - gochecknoinits
+      path: cmd/p2iwd/root.go
+      text: "don't use `init` function"
+    #
+    #
+    #
+    - linters:
+        - gocognit
+      path: internal/app/n3dr/artifactsv2/upload/upload.go
+      text: 'cognitive complexity 71'
+    - linters:
+        - gocognit
+      path: internal/app/n3dr/artifactsv2/upload/upload.go
+      text: cognitive complexity 55 of func `UploadSingleArtifact` is high
+    - linters:
+        - gocyclo
+      path: internal/app/n3dr/artifactsv2/upload/upload.go
+      text: 'cyclomatic complexity 38'
+    - linters:
+        - funlen
+      path: internal/app/n3dr/artifactsv2/upload/upload.go
+      text: Function 'UploadSingleArtifact' has too many statements
+    - linters:
+        - funlen
+      path: internal/app/n3dr/artifactsv2/upload/upload.go
+      text: Function 'mavenJarAndOtherExtensions' has too many statements
+    - linters:
+        - maintidx
+      path: internal/app/n3dr/artifactsv2/upload/upload.go
+      text: 'Cyclomatic Complexity: 38'
+linters:
+  enable-all: true
+  disable:
+    - cyclop
+    - exhaustruct
+    - forbidigo
+    - forcetypeassert
+    - gochecknoglobals
+    - goconst
+    - gocritic
+    - goerr113
+    - golint
+    - gomnd
+    - lll
+    - nestif
+    - nlreturn
+    - noctx
+    - nonamedreturns
+    - paralleltest
+    - perfsprint
+    - revive
+    - testifylint
+    - testpackage
+    - usestdlibvars
+    - varnamelen
+    - wrapcheck
+    - wsl
+    #
+    # The following linters have been deprecated
+    #
+    - maligned
+    - ifshort
+    - structcheck
+    - exhaustivestruct
+    - scopelint
+    - deadcode
+    - nosnakecase
+    - interfacer
+    - varcheck
+linters-settings:
+  depguard:
+    # Rules to apply.
+    #
+    # Variables:
+    # - File Variables
+    #   you can still use and exclamation mark ! in front of a variable to say
+    #   not to use it.
+    #   Example !$test will match any file that is not a go test file.
+    #
+    #   `$all` - matches all go files
+    #   `$test` - matches all go test files
+    #
+    # - Package Variables
+    #
+    #  `$gostd` - matches all of go's standard library (Pulled from `GOROOT`)
+    #
+    # Default: Only allow $gostd in all files.
+    rules:
+      # Name of a rule.
+      main:
+        # List of file globs that will match this list of settings to compare
+        # against.
+        # Default: $all
+        files:
+          - '!**/*_a _file.go'
+        # List of allowed packages.
+        allow:
+          - $gostd
+          - github.com/030/logging/pkg/logging
+          - github.com/030/mij
+          - github.com/030/n3dr/internal/app/n3dr
+          - github.com/030/p2iwd/pkg/p2iwd
+          - github.com/aws/aws-sdk-go/aws
+          - github.com/aws/aws-sdk-go/aws/credentials
+          - github.com/aws/aws-sdk-go/aws/session
+          - github.com/aws/aws-sdk-go/service/s3/s3manager
+          - github.com/go-openapi/runtime/client
+          - github.com/go-openapi/strfmt
+          - github.com/go-playground/validator/v10
+          - github.com/hashicorp/go-retryablehttp
+          - github.com/mholt/archiver
+          - github.com/mitchellh/go-homedir
+          - github.com/OpenPeeDeeP
+          - github.com/samber/lo
+          - github.com/sirupsen/logrus
+          - github.com/spf13/cobra
+          - github.com/spf13/viper
+          - github.com/stretchr/testify/assert
+          - github.com/030/p2iwd/internal/pkg/http
+          - github.com/tidwall/gjson
+          - github.com/030/p2iwd/internal/app/p2iwd/pull
+          - github.com/030/p2iwd/internal/app/p2iwd/push
+          - github.com/030/p2iwd/internal/pkg/http
+        # Packages that are not allowed where the value is a suggestion.
+        deny:
+          # - pkg: 'github.com/sirupsen/logrus'
+          #   desc: not allowed
+          - pkg: 'github.com/pkg/errors'
+            desc: Should be replaced by standard lib errors package

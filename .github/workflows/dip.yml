@@ -5,11 +5,10 @@ name: DIP
     - cron: '0 0 23 * *'
 jobs:
   dip:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: Check whether images are up-to-date
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4.1.4
         with:
           fetch-depth: 0
           token: ${{ secrets.WORKFLOW_TOKEN }}
@@ -20,9 +19,10 @@ jobs:
           tag=$(./dip image --name=utrecht/dip --regex=^4\(\.[0-9]\+\)\{2\}$)
           sed -i "s|\([0-9]\+\.\)\{2\}[0-9]\+\/dip|${tag}/dip|" ./.github/workflows/dip.yml
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5.0.0
         with:
-          go-version: 1.19.0
+          go-version-file: 'go.mod'
+          cache: false
       - name: Check Golang
         run: |
           go_major_minor=$(./dip image --name=golang --regex=^1\.[0-9]+$)

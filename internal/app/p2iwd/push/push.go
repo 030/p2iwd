@@ -23,7 +23,7 @@ type DockerRegistry struct {
 	Dir, Host, Pass, User string
 }
 
-// check whether an URL starts with a scheme, e.g. http:// or https://
+// check whether an URL starts with a scheme, e.g. http:// or https://.
 func absoluteURL(l string) (bool, error) {
 	u, err := url.Parse(l)
 	if err != nil {
