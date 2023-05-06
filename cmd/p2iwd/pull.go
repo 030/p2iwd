@@ -5,6 +5,7 @@ import (
 	"github.com/030/p2iwd/internal/app/p2iwd/pull"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"gopkg.in/validator.v2"
 )
 
 // pullCmd represents the pull command
@@ -19,6 +20,9 @@ var pullCmd = &cobra.Command{
 		}
 
 		pdr := pull.DockerRegistry{Dir: dir, Host: host, Pass: pass, User: user}
+		if errs := validator.Validate(pdr); errs != nil {
+			log.Fatal(errs)
+		}
 		if repo != "" {
 			if err := pdr.Image(repo, tag); err != nil {
 				log.Fatal(err)
@@ -33,14 +37,4 @@ var pullCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(pullCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// pullCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// pullCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

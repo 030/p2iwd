@@ -26,7 +26,8 @@ const (
 )
 
 type DockerRegistry struct {
-	Dir, Host, Pass, User string
+	Host            string `validate:"regexp=^http(s?)://"`
+	Dir, Pass, User string `validate:"min=2"`
 }
 
 type manifestJSON struct {
@@ -145,6 +146,7 @@ func (dr *DockerRegistry) All() error {
 }
 
 func (dr *DockerRegistry) allLayers() error {
+	log.Tracef("trying to determine all Docker repositories in host: '%s'...", dr.Host)
 	url := dr.Host + internalHttp.Version + uriCatalog
 	repos, err := dr.json(url, "repositories")
 	if err != nil {
@@ -171,22 +173,28 @@ func (dr *DockerRegistry) allLayers() error {
 
 func (dr *DockerRegistry) Image(repo, tag string) error {
 	dir := filepath.Join(dr.Dir, repo, tag)
+
+	log.Infof("creating dir: '%s'", dir)
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return err
 	}
 
+	log.Infof("determining layers...")
 	if err := dr.layers(dir, repo, tag); err != nil {
 		return err
 	}
 
+	log.Infof("downloading manifest...")
 	if err := dr.downloadManifest(dir, repo, tag); err != nil {
 		return err
 	}
 
+	log.Infof("downloading config...")
 	if err := dr.downloadConfig(dir, repo, tag); err != nil {
 		return err
 	}
 
+	log.Infof("creating tar: '%s'...", dir)
 	if err := tar(dir); err != nil {
 		return err
 	}
@@ -221,14 +229,32 @@ func (dr *DockerRegistry) tags(repo string) error {
 
 func (dr *DockerRegistry) layers(dir, repo, tag string) error {
 	url := dr.Host + internalHttp.Version + repo + uriManifests + tag
-	blobSums, err := dr.json(url, "fsLayers.#.blobSum")
+
+	schemaVersionArray, err := dr.json(url, "schemaVersion")
 	if err != nil {
 		return err
 	}
-	log.Debugf("blobSums: '%s'", blobSums)
+	if len(schemaVersionArray) == 0 {
+		return fmt.Errorf("schemaversion should not be empty")
+	}
+	schemaVersion := schemaVersionArray[0].String()
+	log.Infof("manifest schemaVersion: '%s'", schemaVersion)
+
+	key := "fsLayers.#.blobSum"
+	if schemaVersion == "2" {
+		key = "layers.#.digest"
+	}
+
+	blobSums, err := dr.json(url, key)
+	if err != nil {
+		return err
+	}
+
+	if len(blobSums) == 0 {
+		return fmt.Errorf("blobsums should not be empty")
+	}
 
 	var wg sync.WaitGroup
-
 	for _, blobSum := range blobSums {
 		wg.Add(1)
 		blobSumString := blobSum.String()
@@ -265,6 +291,7 @@ func (dr *DockerRegistry) layers(dir, repo, tag string) error {
 }
 
 func (dr *DockerRegistry) json(url, key string) ([]gjson.Result, error) {
+	log.Tracef("trying to authenticate to host: '%s'...", dr.Host)
 	ha := internalHttp.Auth{HeaderKey: "Accept", Method: "GET", Pass: dr.Pass, User: dr.User, URL: url}
 	rc, err := ha.RequestAndResponseBody(nil)
 	if err != nil {
@@ -354,7 +381,8 @@ func tar(dir string) error {
 		return err
 	}
 
-	out, err := os.Create(filepath.Clean(filepath.Join(dir, imageTar)))
+	image := filepath.Clean(filepath.Join(dir, imageTar))
+	out, err := os.Create(image)
 	if err != nil {
 		return err
 	}
@@ -367,9 +395,18 @@ func tar(dir string) error {
 		Compression: archiverV4.Gz{},
 		Archival:    archiverV4.Tar{},
 	}
-	err = format.Archive(context.Background(), out, files)
+	if err = format.Archive(context.Background(), out, files); err != nil {
+		return err
+	}
+	fi, err := os.Stat(image)
 	if err != nil {
 		return err
 	}
+	size := fi.Size()
+	if size < 4096 {
+		return fmt.Errorf("archive: '%s' is less than 4kb. Something is wrong...", image)
+	}
+	log.Infof("archive: '%s' created. Size: '%d' bytes", image, fi.Size())
+
 	return nil
 }

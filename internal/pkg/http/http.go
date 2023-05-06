@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 
@@ -17,6 +18,7 @@ type Auth struct {
 }
 
 func (a *Auth) RequestAndResponse(body io.Reader) (*http.Response, error) {
+	log.Tracef("trying to authenticate to host: '%s'...", a.URL)
 	req, err := http.NewRequest(a.Method, a.URL, body)
 	if err != nil {
 		return nil, err
@@ -34,8 +36,9 @@ func (a *Auth) RequestAndResponse(body io.Reader) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Debug(resp.Status)
-	log.Infof("url: '%s'. StatusCode: '%d'", a.URL, resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("statuscode was not 200, but: '%d'", resp.StatusCode)
+	}
 
 	return resp, nil
 }
