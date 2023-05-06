@@ -87,7 +87,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", `config file (default: "${HOME}/.p2iwd/config.yml")`)
 	rootCmd.PersistentFlags().StringVar(&dir, "dir", "", "describe dir")
 	rootCmd.PersistentFlags().StringVar(&host, "host", "", "describe host")
-	rootCmd.PersistentFlags().StringVar(&logLevel, "logLevel", "info", "change the log level (default: info, options: trace, debug, info, warn, error or none)")
+	rootCmd.PersistentFlags().StringVar(&logLevel, "logLevel", "info", "change the log level (options: trace, debug, info, warn, error or none)")
 	rootCmd.PersistentFlags().StringVarP(&pass, "pass", "p", "", "describe pass")
 	rootCmd.PersistentFlags().StringVarP(&repo, "repo", "r", "", "describe repo")
 	rootCmd.PersistentFlags().BoolVar(&syslog, "syslog", false, "write the log to syslog")
