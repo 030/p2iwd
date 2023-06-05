@@ -6,7 +6,7 @@ require (
 	github.com/030/logging v0.1.2
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
