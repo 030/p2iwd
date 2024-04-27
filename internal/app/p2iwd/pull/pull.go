@@ -404,7 +404,7 @@ func tar(dir string) error {
 	}
 	size := fi.Size()
 	if size < 4096 {
-		return fmt.Errorf("archive: '%s' is less than 4kb. Something is wrong...", image)
+		return fmt.Errorf("archive: '%s' is less than 4kb. Something is wrong", image)
 	}
 	log.Infof("archive: '%s' created. Size: '%d' bytes", image, fi.Size())
 

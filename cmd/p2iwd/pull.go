@@ -8,7 +8,7 @@ import (
 	"gopkg.in/validator.v2"
 )
 
-// pullCmd represents the pull command
+// pullCmd represents the pull command.
 var pullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Pull an image",

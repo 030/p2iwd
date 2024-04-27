@@ -23,7 +23,7 @@ type DockerRegistry struct {
 	Dir, Host, Pass, User string
 }
 
-// check whether an URL starts with a scheme, e.g. http:// or https://
+// check whether an URL starts with a scheme, e.g. http:// or https://.
 func absoluteURL(l string) (bool, error) {
 	u, err := url.Parse(l)
 	if err != nil {
@@ -98,7 +98,15 @@ func (dr *DockerRegistry) dockerImageNameAndTag(path string) (DockerImage, error
 }
 
 func (dr *DockerRegistry) manifestUpload(f *os.File, headerValue, uploadURL string) error {
-	ha := internalHttp.Auth{HeaderKey: "Content-Type", HeaderValue: headerValue, Method: "PUT", Pass: dr.Pass, User: dr.User, URL: uploadURL}
+	log.Tracef(">>>>>>>>>>>>>>>>CP1<<<<<<<<<<<<<<<<<<<<<")
+	ha := internalHttp.Auth{
+		HeaderKey:   "Content-Type",
+		HeaderValue: headerValue,
+		Method:      "PUT",
+		Pass:        dr.Pass,
+		User:        dr.User,
+		URL:         uploadURL,
+	}
 	rc, err := ha.RequestAndResponseBody(f)
 	if err != nil {
 		return err
@@ -113,12 +121,14 @@ func (dr *DockerRegistry) manifestUpload(f *os.File, headerValue, uploadURL stri
 			panic(err)
 		}
 	}()
+	log.Tracef(">>>>>>>>>>>>>>>>CP4<<<<<<<<<<<<<<<<<<<<<")
 
 	b, err := io.ReadAll(rc)
 	if err != nil {
 		return err
 	}
-	log.Trace(string(b))
+
+	log.Tracef(">>>>>>>>>>>>>>>>CP2<<<<<<<%v<<<<<<<<<<<<<<", string(b))
 	return nil
 }
 
