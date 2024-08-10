@@ -1,0 +1,19 @@
+---
+name: gomod-go-version-updater-action
+'on':
+  push
+  #
+  # schedule:
+  #   - cron: '42 6 * * *'
+  #
+  #
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  gomod-go-version-updater-action:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: 030/gomod-go-version-updater-action@43-private-go-modules
+        # with:
+        #   github-token-for-downloading-private-go-modules: ${{ secrets.GITHUB_TOKEN }}
