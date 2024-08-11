@@ -1,6 +1,6 @@
 module github.com/030/p2iwd
 
-go 1.19
+go 1.22
 
 require (
 	github.com/030/logging v0.1.2
