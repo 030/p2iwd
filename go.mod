@@ -1,6 +1,6 @@
 module github.com/030/p2iwd
 
-go 1.19
+go 1.21
 
 require (
 	github.com/030/logging v0.1.2
@@ -27,7 +27,7 @@ require (
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/nwaples/rardecode/v2 v2.0.0-beta.2 // indirect
+	github.com/nwaples/rardecode/v2 v2.2.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
